@@ -107,7 +107,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-  // TODO: Replace with your Firebase config
+  // Replace with your Firebase config
   const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -121,29 +121,29 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // DOM
+  // DOM Elements
   const messagesDiv = document.getElementById('messages');
   const input = document.getElementById('messageInput');
   const chatHeader = document.getElementById('chatHeader');
   const channels = document.querySelectorAll('.channel');
 
-  // User setup
+  // User info
   let user = {
     name: localStorage.getItem('chat_name') || '',
     avatar: '',
   };
 
-  // Current active channel
+  // Active channel
   let activeChannel = 'github-chat';
 
-  // Ask for user name if not set
+  // Prompt username if not set
   if (!user.name) {
     const n = prompt("What's your name?");
     user.name = n ? n.trim() || 'Anonymous' : 'Anonymous';
     localStorage.setItem('chat_name', user.name);
   }
 
-  // Helper to create avatar (initials)
+  // Create avatar with initials
   function createAvatar(name) {
     const div = document.createElement('div');
     div.className = 'avatar';
@@ -151,7 +151,7 @@
     return div;
   }
 
-  // Add message to DOM
+  // Add message to chat window
   function addMessage(msg) {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message';
@@ -177,14 +177,19 @@
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
-  // Load messages for a given channel and listen for new ones
+  // Firebase message ref
   let messagesRef = null;
 
-  function listenChannel(channel) {
-    if (messagesRef) messagesRef.off(); // stop old listener
+  // Spam prevention vars
+  let lastMessageText = '';
+  let canSend = true;
 
-    messagesDiv.innerHTML = ''; // clear messages
+  // Listen to messages for active channel
+  function listenChannel(channel) {
+    if (messagesRef) messagesRef.off();
+    messagesDiv.innerHTML = '';
     chatHeader.textContent = '#' + channel.replace('-', ' ');
+    activeChannel = channel;
 
     messagesRef = db.ref('messages/' + channel);
     messagesRef.limitToLast(100).on('child_added', snapshot => {
@@ -193,23 +198,34 @@
     });
   }
 
-  // Send message
+  // Send a message (with spam prevention)
   function sendMessage(text) {
     if (!text.trim()) return;
+    if (!canSend) return;
+    if (text === lastMessageText) return;
+
+    lastMessageText = text;
+    canSend = false;
+
     const message = {
       name: user.name,
       text: text,
       timestamp: Date.now()
     };
+
     db.ref('messages/' + activeChannel).push(message);
 
-    // Bot only replies in bot-chat channel
+    // Bot replies only in bot-chat
     if (activeChannel === 'bot-chat') {
       botReply(text);
     }
+
+    setTimeout(() => {
+      canSend = true;
+    }, 2000);
   }
 
-  // Bot reply logic - only replies when @WelcomeBot is pinged
+  // Bot reply logic
   function botReply(text) {
     const lower = text.toLowerCase();
     if (!lower.includes('@welcomebot')) return;
@@ -231,20 +247,19 @@
     }
   }
 
-  // Channel click handler
+  // Handle channel clicks
   channels.forEach(channelEl => {
     channelEl.onclick = () => {
       if (channelEl.dataset.channel === activeChannel) return;
-      activeChannel = channelEl.dataset.channel;
 
       channels.forEach(c => c.classList.remove('active'));
       channelEl.classList.add('active');
 
-      listenChannel(activeChannel);
+      listenChannel(channelEl.dataset.channel);
     };
   });
 
-  // Message input handler
+  // Handle input enter key
   input.addEventListener('keypress', e => {
     if (e.key === 'Enter' && input.value.trim() !== '') {
       sendMessage(input.value.trim());
