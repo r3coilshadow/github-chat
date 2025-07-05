@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>GitHub Chat - 2 Channels w/ Mention & Spam Block</title>
+<title>GitHub Chat - 2 Channels with Bot & Mention</title>
 <style>
   body {
     margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -248,20 +248,20 @@
     }, 3000); // 3 seconds cooldown
   }
 
-  // Bot reply logic
+  // Bot reply logic (only if message starts with @welcomebot)
   function botReply(text) {
-    const lower = text.toLowerCase();
-    if (!lower.includes('@welcomebot')) return;
+    const lower = text.toLowerCase().trim();
 
-    // Extract command after mention
-    const afterMention = text.toLowerCase().split('@welcomebot')[1].trim();
+    if (!lower.startsWith('@welcomebot')) return;
+
+    const afterMention = text.trim().substring(11).trim(); // remove '@welcomebot' length 11
 
     let reply = null;
     if (afterMention.startsWith('hello') || afterMention.startsWith('hi')) reply = "Hello! How can I help you?";
     else if (afterMention.startsWith('help')) reply = "I'm here to assist! What do you need?";
     else if (afterMention.startsWith('thanks') || afterMention.startsWith('thank you')) reply = "You're welcome!";
     else if (afterMention.length === 0) reply = "Hi! Say something after @WelcomeBot.";
-    else reply = null; // Don't reply for unrecognized commands to reduce spam
+    else reply = null; // No reply on unknown commands
 
     if (reply) {
       setTimeout(() => {
