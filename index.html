@@ -1,209 +1,139 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GitHub Chat - Bot, Sound & Settings</title>
-  <style>
-    body {
-      margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #2c2f33; color: white; display: flex; height: 100vh;
-      flex-direction: column;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    body.light {
-      background-color: #f6f6f6; color: #2c2f33;
-    }
-    header {
-      background: #23272a; padding: 10px 20px; font-weight: bold; font-size: 20px;
-      display: flex; justify-content: space-between; align-items: center;
-      transition: background-color 0.3s;
-    }
-    body.light header {
-      background: #ddd;
-    }
-    #settingsBtn {
-      background: #7289da; border: none; color: white; padding: 5px 12px;
-      border-radius: 4px; cursor: pointer;
-      transition: background-color 0.3s;
-    }
-    body.light #settingsBtn {
-      background: #5865f2;
-      color: white;
-    }
-    #chat {
-      flex: 1; display: flex; overflow: hidden;
-    }
-    .sidebar {
-      width: 70px; background-color: #23272a; display: flex; flex-direction: column;
-      align-items: center; padding-top: 10px; user-select: none;
-      transition: background-color 0.3s;
-    }
-    body.light .sidebar {
-      background-color: #ddd;
-    }
-    .server-icon {
-      width: 50px; height: 50px; background-color: #7289da;
-      border-radius: 50%; display: flex; justify-content: center; align-items: center;
-      font-weight: bold; font-size: 14px; margin-bottom: 10px;
-      color: white;
-      transition: background-color 0.3s;
-    }
-    body.light .server-icon {
-      background-color: #5865f2;
-      color: white;
-    }
-    .channel-bar {
-      width: 240px; background-color: #2c2f33; padding: 10px;
-      box-sizing: border-box;
-      transition: background-color 0.3s;
-    }
-    body.light .channel-bar {
-      background-color: #eee;
-      color: #2c2f33;
-    }
-    .channel {
-      padding: 10px; background-color: #36393f; border-radius: 5px;
-      margin-bottom: 5px; font-weight: bold; cursor: pointer;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    body.light .channel {
-      background-color: #ddd;
-      color: #2c2f33;
-    }
-    .channel.active {
-      background-color: #7289da;
-      color: white;
-    }
-    .chat-window {
-      flex: 1; background-color: #36393f; display: flex; flex-direction: column;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    body.light .chat-window {
-      background-color: #fff;
-      color: #2c2f33;
-    }
-    .chat-header {
-      padding: 10px; border-bottom: 1px solid #202225; font-weight: bold;
-      transition: border-color 0.3s;
-    }
-    body.light .chat-header {
-      border-color: #ccc;
-    }
-    .messages {
-      flex: 1; padding: 10px; overflow-y: auto; word-break: break-word;
-    }
-    .message {
-      margin-bottom: 10px; display: flex; align-items: center;
-    }
-    .message .avatar {
-      width: 32px; height: 32px; border-radius: 50%; background-color: #7289da;
-      color: white; font-weight: bold; font-size: 14px; display: flex;
-      justify-content: center; align-items: center; margin-right: 8px;
-      flex-shrink: 0;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    body.light .message .avatar {
-      background-color: #5865f2;
-    }
-    .message .content {
-      background: #2f3136; padding: 8px 12px; border-radius: 6px;
-      max-width: 75%;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    body.light .message .content {
-      background: #eee;
-      color: #2c2f33;
-    }
-    .message .username {
-      font-weight: bold; margin-right: 5px; color: #7289da;
-      transition: color 0.3s;
-    }
-    body.light .message .username {
-      color: #5865f2;
-    }
-    .input-area {
-      border-top: 1px solid #202225; padding: 10px;
-      display: flex; background-color: #40444b; position: relative;
-      transition: background-color 0.3s, border-color 0.3s;
-    }
-    body.light .input-area {
-      background-color: #eee;
-      border-color: #ccc;
-    }
-    .input-area input {
-      flex: 1; padding: 10px; border-radius: 5px; border: none;
-      background-color: #2c2f33; color: white; font-size: 16px;
-      outline: none;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    body.light .input-area input {
-      background-color: #fff;
-      color: #2c2f33;
-    }
-    /* Mention dropdown */
-    #mentionDropdown {
-      position: absolute;
-      bottom: 45px;
-      left: 10px;
-      background: #23272a;
-      border-radius: 5px;
-      box-shadow: 0 0 5px #000;
-      max-width: 200px;
-      font-size: 14px;
-      color: white;
-      display: none;
-      z-index: 10;
-    }
-    body.light #mentionDropdown {
-      background: #ddd;
-      color: #2c2f33;
-      box-shadow: 0 0 5px #aaa;
-    }
-    #mentionDropdown div {
-      padding: 5px 10px;
-      cursor: pointer;
-    }
-    #mentionDropdown div:hover {
-      background-color: #7289da;
-      color: white;
-    }
-    /* Settings Modal */
-    #settingsModal {
-      position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-      background-color: rgba(0,0,0,0.7);
-      display: none; justify-content: center; align-items: center;
-      z-index: 100;
-    }
-    #settingsContent {
-      background: #2c2f33; padding: 20px; border-radius: 10px;
-      width: 300px;
-      color: white;
-      box-sizing: border-box;
-    }
-    body.light #settingsContent {
-      background: #fff;
-      color: #2c2f33;
-    }
-    #settingsContent label {
-      display: block; margin-top: 10px; font-weight: bold;
-    }
-    #settingsContent input[type="text"] {
-      width: 100%; padding: 8px; margin-top: 5px;
-      border-radius: 5px; border: 1px solid #555;
-      box-sizing: border-box;
-    }
-    body.light #settingsContent input[type="text"] {
-      border: 1px solid #ccc;
-    }
-    #settingsContent button {
-      margin-top: 15px; padding: 8px 15px; border: none; border-radius: 5px;
-      background-color: #7289da; color: white; cursor: pointer;
-    }
-    body.light #settingsContent button {
-      background-color: #5865f2;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GitHub Chat - Fixed</title>
+<style>
+  body {
+    margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #2c2f33; color: white; display: flex; height: 100vh;
+    flex-direction: column; transition: background-color 0.3s, color 0.3s;
+  }
+  body.light {
+    background-color: #f6f6f6; color: #2c2f33;
+  }
+  header {
+    background: #23272a; padding: 10px 20px; font-weight: bold; font-size: 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    transition: background-color 0.3s;
+  }
+  body.light header { background: #ddd; }
+  #settingsBtn {
+    background: #7289da; border: none; color: white; padding: 5px 12px;
+    border-radius: 4px; cursor: pointer; transition: background-color 0.3s;
+  }
+  body.light #settingsBtn {
+    background: #5865f2; color: white;
+  }
+  #chat {
+    flex: 1; display: flex; overflow: hidden;
+  }
+  .sidebar {
+    width: 70px; background-color: #23272a; display: flex; flex-direction: column;
+    align-items: center; padding-top: 10px; user-select: none;
+    transition: background-color 0.3s;
+  }
+  body.light .sidebar { background-color: #ddd; }
+  .server-icon {
+    width: 50px; height: 50px; background-color: #7289da;
+    border-radius: 50%; display: flex; justify-content: center; align-items: center;
+    font-weight: bold; font-size: 14px; margin-bottom: 10px;
+    color: white; transition: background-color 0.3s;
+  }
+  body.light .server-icon {
+    background-color: #5865f2; color: white;
+  }
+  .channel-bar {
+    width: 240px; background-color: #2c2f33; padding: 10px;
+    box-sizing: border-box; transition: background-color 0.3s;
+  }
+  body.light .channel-bar { background-color: #eee; color: #2c2f33; }
+  .channel {
+    padding: 10px; background-color: #36393f; border-radius: 5px;
+    margin-bottom: 5px; font-weight: bold; cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  body.light .channel { background-color: #ddd; color: #2c2f33; }
+  .channel.active {
+    background-color: #7289da; color: white;
+  }
+  .chat-window {
+    flex: 1; background-color: #36393f; display: flex; flex-direction: column;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  body.light .chat-window { background-color: #fff; color: #2c2f33; }
+  .chat-header {
+    padding: 10px; border-bottom: 1px solid #202225; font-weight: bold;
+    transition: border-color 0.3s;
+  }
+  body.light .chat-header { border-color: #ccc; }
+  .messages {
+    flex: 1; padding: 10px; overflow-y: auto; word-break: break-word;
+  }
+  .message {
+    margin-bottom: 10px; display: flex; align-items: center;
+  }
+  .message .avatar {
+    width: 32px; height: 32px; border-radius: 50%; background-color: #7289da;
+    color: white; font-weight: bold; font-size: 14px; display: flex;
+    justify-content: center; align-items: center; margin-right: 8px;
+    flex-shrink: 0; transition: background-color 0.3s, color 0.3s;
+  }
+  body.light .message .avatar { background-color: #5865f2; }
+  .message .content {
+    background: #2f3136; padding: 8px 12px; border-radius: 6px;
+    max-width: 75%; transition: background-color 0.3s, color 0.3s;
+  }
+  body.light .message .content { background: #eee; color: #2c2f33; }
+  .message .username {
+    font-weight: bold; margin-right: 5px; color: #7289da;
+    transition: color 0.3s;
+  }
+  body.light .message .username { color: #5865f2; }
+  .input-area {
+    border-top: 1px solid #202225; padding: 10px;
+    display: flex; background-color: #40444b; position: relative;
+    transition: background-color 0.3s, border-color 0.3s;
+  }
+  body.light .input-area { background-color: #eee; border-color: #ccc; }
+  .input-area input {
+    flex: 1; padding: 10px; border-radius: 5px; border: none;
+    background-color: #2c2f33; color: white; font-size: 16px;
+    outline: none; transition: background-color 0.3s, color 0.3s;
+  }
+  body.light .input-area input { background-color: #fff; color: #2c2f33; }
+  #mentionDropdown {
+    position: absolute; bottom: 45px; left: 10px;
+    background: #23272a; border-radius: 5px; box-shadow: 0 0 5px #000;
+    max-width: 200px; font-size: 14px; color: white; display: none; z-index: 10;
+  }
+  body.light #mentionDropdown { background: #ddd; color: #2c2f33; box-shadow: 0 0 5px #aaa; }
+  #mentionDropdown div { padding: 5px 10px; cursor: pointer; }
+  #mentionDropdown div:hover { background-color: #7289da; color: white; }
+  #settingsModal {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 100;
+  }
+  #settingsContent {
+    background: #2c2f33; padding: 20px; border-radius: 10px;
+    width: 300px; color: white; box-sizing: border-box;
+  }
+  body.light #settingsContent { background: #fff; color: #2c2f33; }
+  #settingsContent label {
+    display: block; margin-top: 10px; font-weight: bold;
+  }
+  #settingsContent input[type="text"] {
+    width: 100%; padding: 8px; margin-top: 5px;
+    border-radius: 5px; border: 1px solid #555; box-sizing: border-box;
+  }
+  body.light #settingsContent input[type="text"] { border: 1px solid #ccc; }
+  #settingsContent button {
+    margin-top: 15px; padding: 8px 15px; border: none; border-radius: 5px;
+    background-color: #7289da; color: white; cursor: pointer;
+  }
+  body.light #settingsContent button { background-color: #5865f2; }
+</style>
 </head>
 <body>
 
@@ -252,7 +182,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
 <script>
-  // Replace with your Firebase config
+  // Replace these with your Firebase config:
   const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
@@ -262,11 +192,9 @@
     messagingSenderId: "SENDER_ID",
     appId: "APP_ID"
   };
-
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
 
-  // DOM Elements
   const messagesDiv = document.getElementById('messages');
   const input = document.getElementById('messageInput');
   const chatHeader = document.getElementById('chatHeader');
@@ -279,38 +207,25 @@
   const darkModeToggle = document.getElementById('darkModeToggle');
   const sendSound = document.getElementById('sendSound');
 
-  // User info
   let user = {
     name: localStorage.getItem('chat_name') || '',
-    avatar: '',
   };
 
-  // Dark mode from localStorage
   let darkMode = localStorage.getItem('dark_mode') === 'true';
 
   function applyDarkMode() {
-    if (darkMode) {
-      document.body.classList.add('light');
-      darkModeToggle.checked = false;
-    } else {
-      document.body.classList.remove('light');
-      darkModeToggle.checked = true;
-    }
+    if (darkMode) document.body.classList.add('light');
+    else document.body.classList.remove('light');
   }
-
   applyDarkMode();
 
-  // Active channel
   let activeChannel = 'github-chat';
-
-  // Prompt username if not set
   if (!user.name) {
     const n = prompt("What's your name?");
     user.name = n ? n.trim() || 'Anonymous' : 'Anonymous';
     localStorage.setItem('chat_name', user.name);
   }
 
-  // Create avatar with initials
   function createAvatar(name) {
     const div = document.createElement('div');
     div.className = 'avatar';
@@ -318,7 +233,6 @@
     return div;
   }
 
-  // Add message to chat window
   function addMessage(msg) {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'message';
@@ -344,14 +258,10 @@
     messagesDiv.scrollTop = messagesDiv.scrollHeight;
   }
 
-  // Firebase message ref
   let messagesRef = null;
-
-  // Spam prevention vars
   let lastMessageText = '';
   let canSend = true;
 
-  // Listen to messages for active channel
   function listenChannel(channel) {
     if (messagesRef) messagesRef.off();
     messagesDiv.innerHTML = '';
@@ -365,7 +275,6 @@
     });
   }
 
-  // Send a message (with spam prevention)
   function sendMessage(text) {
     if (!text.trim()) return;
     if (!canSend) return;
@@ -383,61 +292,47 @@
     db.ref('messages/' + activeChannel).push(message);
     sendSound.play();
 
-    // Bot replies only in bot-chat
     if (activeChannel === 'bot-chat') {
       botReply(text);
     }
 
     setTimeout(() => {
       canSend = true;
-    }, 3000); // 3 seconds cooldown
+    }, 3000);
   }
 
-  // Bot reply logic (only if message starts exactly with @WelcomeBot + space or text)
   function botReply(text) {
     const trimmed = text.trim();
-    const lower = trimmed.toLowerCase();
-
-    // Regex to check if message starts with '@welcomebot' plus space or end of string
-    if (!/^@welcomebot(\s|$)/i.test(trimmed)) return;
-
-    // Get the message after the mention
-    const afterMention = trimmed.substring(11).trim(); // '@welcomebot' is 11 chars
+    if (!/^@WelcomeBot(\s|$)/i.test(trimmed)) return;
+    const afterMention = trimmed.substring(11).trim();
 
     let reply = null;
     if (afterMention.startsWith('hello') || afterMention.startsWith('hi')) reply = "Hello! How can I help you?";
     else if (afterMention.startsWith('help')) reply = "I'm here to assist! What do you need?";
     else if (afterMention.startsWith('thanks') || afterMention.startsWith('thank you')) reply = "You're welcome!";
     else if (afterMention.length === 0) reply = "Hi! Say something after @WelcomeBot.";
-    else reply = null; // No reply on unknown commands
+    else return; // no reply if unknown
 
-    if (reply) {
-      setTimeout(() => {
-        db.ref('messages/bot-chat').push({
-          name: 'WelcomeBot',
-          text: reply,
-          timestamp: Date.now()
-        });
-      }, 1500);
-    }
+    setTimeout(() => {
+      db.ref('messages/bot-chat').push({
+        name: 'WelcomeBot',
+        text: reply,
+        timestamp: Date.now()
+      });
+    }, 1500);
   }
 
-  // Handle channel clicks
   channels.forEach(channelEl => {
     channelEl.onclick = () => {
       if (channelEl.dataset.channel === activeChannel) return;
-
       channels.forEach(c => c.classList.remove('active'));
       channelEl.classList.add('active');
-
       listenChannel(channelEl.dataset.channel);
     };
   });
 
-  // Mention autocomplete data
   const mentionList = ['WelcomeBot'];
 
-  // Show mention dropdown
   function showMentionDropdown() {
     mentionDropdown.innerHTML = '';
     mentionList.forEach(name => {
@@ -457,12 +352,10 @@
     mentionDropdown.style.display = 'block';
   }
 
-  // Hide mention dropdown
   function hideMentionDropdown() {
     mentionDropdown.style.display = 'none';
   }
 
-  // Handle input for mention autocomplete
   input.addEventListener('input', () => {
     const val = input.value;
     const atPos = val.lastIndexOf('@');
@@ -476,14 +369,12 @@
     hideMentionDropdown();
   });
 
-  // Hide mention dropdown on clicks outside
   document.addEventListener('click', (e) => {
     if (!mentionDropdown.contains(e.target) && e.target !== input) {
       hideMentionDropdown();
     }
   });
 
-  // Handle input enter key
   input.addEventListener('keypress', e => {
     if (e.key === 'Enter' && input.value.trim() !== '') {
       sendMessage(input.value.trim());
@@ -495,8 +386,32 @@
   // Settings modal open
   settingsBtn.onclick = () => {
     nameInput.value = user.name;
-    darkModeToggle.checked = !darkMode; // because darkMode true means light class is NOT added
+    darkModeToggle.checked = darkMode;
     settingsModal.style.display = 'flex';
   };
 
   // Save settings
+  saveSettingsBtn.onclick = () => {
+    let newName = nameInput.value.trim();
+    if (newName.length < 1) newName = 'Anonymous';
+    user.name = newName;
+    localStorage.setItem('chat_name', newName);
+
+    darkMode = darkModeToggle.checked;
+    localStorage.setItem('dark_mode', darkMode);
+    applyDarkMode();
+
+    settingsModal.style.display = 'none';
+  };
+
+  // Close modal when clicking outside content
+  settingsModal.onclick = (e) => {
+    if (e.target === settingsModal) {
+      settingsModal.style.display = 'none';
+    }
+  };
+
+  listenChannel(activeChannel);
+</script>
+</body>
+</html>
