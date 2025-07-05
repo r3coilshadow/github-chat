@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>GitHub Chat - 2 Channels</title>
+<title>GitHub Chat - 2 Channels w/ Mention & Spam Block</title>
 <style>
   body {
     margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -69,12 +69,33 @@
   }
   .input-area {
     border-top: 1px solid #202225; padding: 10px;
-    display: flex; background-color: #40444b;
+    display: flex; background-color: #40444b; position: relative;
   }
   .input-area input {
     flex: 1; padding: 10px; border-radius: 5px; border: none;
     background-color: #2c2f33; color: white; font-size: 16px;
     outline: none;
+  }
+  /* Mention dropdown */
+  #mentionDropdown {
+    position: absolute;
+    bottom: 45px;
+    left: 10px;
+    background: #23272a;
+    border-radius: 5px;
+    box-shadow: 0 0 5px #000;
+    max-width: 200px;
+    font-size: 14px;
+    color: white;
+    display: none;
+    z-index: 10;
+  }
+  #mentionDropdown div {
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  #mentionDropdown div:hover {
+    background-color: #7289da;
   }
 </style>
 </head>
@@ -98,6 +119,7 @@
     <div class="messages" id="messages"></div>
     <div class="input-area">
       <input id="messageInput" placeholder="Send a message..." autocomplete="off" />
+      <div id="mentionDropdown"></div>
     </div>
   </div>
 </div>
@@ -126,6 +148,7 @@
   const input = document.getElementById('messageInput');
   const chatHeader = document.getElementById('chatHeader');
   const channels = document.querySelectorAll('.channel');
+  const mentionDropdown = document.getElementById('mentionDropdown');
 
   // User info
   let user = {
@@ -222,7 +245,7 @@
 
     setTimeout(() => {
       canSend = true;
-    }, 2000);
+    }, 3000); // 3 seconds cooldown
   }
 
   // Bot reply logic
@@ -230,11 +253,15 @@
     const lower = text.toLowerCase();
     if (!lower.includes('@welcomebot')) return;
 
+    // Extract command after mention
+    const afterMention = text.toLowerCase().split('@welcomebot')[1].trim();
+
     let reply = null;
-    if (lower.includes('hello') || lower.includes('hi')) reply = "Hello! How can I help you?";
-    else if (lower.includes('help')) reply = "I'm here to assist! What do you need?";
-    else if (lower.includes('thanks') || lower.includes('thank you')) reply = "You're welcome!";
-    else reply = "🤖 (I didn't understand that.)";
+    if (afterMention.startsWith('hello') || afterMention.startsWith('hi')) reply = "Hello! How can I help you?";
+    else if (afterMention.startsWith('help')) reply = "I'm here to assist! What do you need?";
+    else if (afterMention.startsWith('thanks') || afterMention.startsWith('thank you')) reply = "You're welcome!";
+    else if (afterMention.length === 0) reply = "Hi! Say something after @WelcomeBot.";
+    else reply = null; // Don't reply for unrecognized commands to reduce spam
 
     if (reply) {
       setTimeout(() => {
@@ -259,11 +286,62 @@
     };
   });
 
+  // Mention autocomplete data
+  const mentionList = ['WelcomeBot'];
+
+  // Show mention dropdown
+  function showMentionDropdown() {
+    mentionDropdown.innerHTML = '';
+    mentionList.forEach(name => {
+      const div = document.createElement('div');
+      div.textContent = name;
+      div.onclick = () => {
+        const val = input.value;
+        const atPos = val.lastIndexOf('@');
+        if (atPos !== -1) {
+          input.value = val.substring(0, atPos + 1) + name + ' ';
+          input.focus();
+          mentionDropdown.style.display = 'none';
+        }
+      };
+      mentionDropdown.appendChild(div);
+    });
+    mentionDropdown.style.display = 'block';
+  }
+
+  // Hide mention dropdown
+  function hideMentionDropdown() {
+    mentionDropdown.style.display = 'none';
+  }
+
+  // Handle input for mention autocomplete
+  input.addEventListener('input', () => {
+    const val = input.value;
+    const atPos = val.lastIndexOf('@');
+    if (atPos !== -1) {
+      const afterAt = val.substring(atPos + 1);
+      // Show dropdown only if afterAt is empty or matches start of "WelcomeBot"
+      if ('WelcomeBot'.toLowerCase().startsWith(afterAt.toLowerCase())) {
+        showMentionDropdown();
+        return;
+      }
+    }
+    hideMentionDropdown();
+  });
+
+  // Hide mention dropdown on clicks outside
+  document.addEventListener('click', (e) => {
+    if (!mentionDropdown.contains(e.target) && e.target !== input) {
+      hideMentionDropdown();
+    }
+  });
+
   // Handle input enter key
   input.addEventListener('keypress', e => {
     if (e.key === 'Enter' && input.value.trim() !== '') {
       sendMessage(input.value.trim());
       input.value = '';
+      hideMentionDropdown();
     }
   });
 
