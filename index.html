@@ -72,7 +72,19 @@
       overflow-y: auto;
     }
     .message {
+      display: flex;
+      align-items: flex-start;
       margin-bottom: 10px;
+    }
+    .pfp {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    .message-content {
+      display: flex;
+      flex-direction: column;
     }
     .message-user {
       font-weight: bold;
@@ -146,12 +158,18 @@
     <button onclick="saveSettings()">Save</button>
   </div>
 
+  <audio id="sendSound" src="https://www.myinstants.com/media/sounds/discord-notification.mp3"></audio>
+
   <script>
     let username = localStorage.getItem('username') || '';
     let pfp = localStorage.getItem('pfp') || '';
     const theme = localStorage.getItem('theme') || 'dark';
     document.getElementById('themeToggle').value = theme;
     applyTheme(theme);
+
+    const messages = document.getElementById('messages');
+    const input = document.getElementById('messageInput');
+    const sendSound = document.getElementById('sendSound');
 
     if (!username) {
       username = prompt('Enter your name:') || 'Guest';
@@ -161,23 +179,45 @@
     window.onload = () => {
       document.getElementById('usernameInput').value = username;
       document.getElementById('pfpInput').value = pfp;
-      sendMessage('WelcomeBot', `Welcome, ${username}!`);
+      sendMessage('WelcomeBot', `Welcome, ${username}!`, 'https://cdn-icons-png.flaticon.com/512/4712/4712109.png');
+      loadMessages();
     };
 
-    document.getElementById('messageInput').addEventListener('keypress', function (e) {
-      if (e.key === 'Enter' && this.value.trim() !== '') {
-        sendMessage(username, this.value);
-        this.value = '';
+    input.addEventListener('keypress', function (e) {
+      if (e.key === 'Enter' && input.value.trim() !== '') {
+        sendMessage(username, input.value, pfp);
+        botReply(input.value);
+        input.value = '';
       }
     });
 
-    function sendMessage(user, text) {
-      const messages = document.getElementById('messages');
+    function sendMessage(user, text, avatar) {
       const messageDiv = document.createElement('div');
       messageDiv.classList.add('message');
-      messageDiv.innerHTML = `<span class="message-user">${user}:</span> ${text}`;
+      const img = avatar ? avatar : 'https://cdn-icons-png.flaticon.com/512/149/149071.png';
+      messageDiv.innerHTML = `
+        <img src="${img}" class="pfp">
+        <div class="message-content">
+          <span class="message-user">${user}:</span>
+          <span>${text}</span>
+        </div>`;
       messages.appendChild(messageDiv);
       messages.scrollTop = messages.scrollHeight;
+      sendSound.play();
+      saveMessage(user, text, avatar);
+    }
+
+    function saveMessage(user, text, avatar) {
+      const chat = JSON.parse(localStorage.getItem('chat')) || [];
+      chat.push({ user, text, avatar });
+      localStorage.setItem('chat', JSON.stringify(chat));
+    }
+
+    function loadMessages() {
+      const chat = JSON.parse(localStorage.getItem('chat')) || [];
+      for (const msg of chat) {
+        sendMessage(msg.user, msg.text, msg.avatar);
+      }
     }
 
     function toggleSettings() {
@@ -210,6 +250,14 @@
         root.style.setProperty('--chat', '#36393f');
         root.style.setProperty('--text', 'white');
         root.style.setProperty('--input', '#40444b');
+      }
+    }
+
+    function botReply(text) {
+      if (text.toLowerCase().includes('hi') || text.toLowerCase().includes('hello')) {
+        setTimeout(() => {
+          sendMessage('ChatBot', `Hey ${username}! Need anything?`, 'https://cdn-icons-png.flaticon.com/512/4712/4712109.png');
+        }, 1000);
       }
     }
   </script>
