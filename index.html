@@ -1,516 +1,260 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>GitHub Chat</title>
-  <style>
-    /* -- Reset and basics -- */
-    body {
-      margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #2c2f33;
-      color: white;
-      display: flex;
-      height: 100vh;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    /* Light mode */
-    body.light {
-      background-color: #f5f5f5;
-      color: #333;
-    }
-    .sidebar {
-      width: 70px;
-      background-color: #23272a;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding-top: 10px;
-      transition: background-color 0.3s;
-    }
-    body.light .sidebar {
-      background-color: #ddd;
-    }
-    .server-icon {
-      width: 50px;
-      height: 50px;
-      background-color: #7289da;
-      border-radius: 50%;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-weight: bold;
-      font-size: 14px;
-      margin-bottom: 10px;
-      color: white;
-      user-select: none;
-    }
-    body.light .server-icon {
-      background-color: #4c6ef5;
-      color: white;
-    }
-    .channel-bar {
-      width: 240px;
-      background-color: #2c2f33;
-      padding: 10px;
-      transition: background-color 0.3s;
-    }
-    body.light .channel-bar {
-      background-color: #eee;
-      color: #333;
-    }
-    .channel {
-      padding: 10px;
-      background-color: #36393f;
-      border-radius: 5px;
-      margin-bottom: 5px;
-      font-weight: bold;
-      user-select: none;
-      cursor: default;
-      transition: background-color 0.3s;
-    }
-    body.light .channel {
-      background-color: #ddd;
-    }
-    .chat {
-      flex: 1;
-      background-color: #36393f;
-      display: flex;
-      flex-direction: column;
-      transition: background-color 0.3s;
-    }
-    body.light .chat {
-      background-color: #fff;
-      color: #333;
-    }
-    .chat-header {
-      padding: 10px;
-      border-bottom: 1px solid #202225;
-      font-weight: bold;
-      user-select: none;
-    }
-    body.light .chat-header {
-      border-bottom: 1px solid #ccc;
-    }
-    .messages {
-      flex: 1;
-      padding: 10px;
-      overflow-y: auto;
-      background-color: transparent;
-    }
-    .message {
-      margin-bottom: 12px;
-      display: flex;
-      align-items: flex-start;
-    }
-    .message img.avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      margin-right: 10px;
-      user-select: none;
-    }
-    .message-content {
-      background-color: #40444b;
-      padding: 8px 12px;
-      border-radius: 8px;
-      max-width: 70%;
-      word-break: break-word;
-      user-select: text;
-      transition: background-color 0.3s;
-    }
-    body.light .message-content {
-      background-color: #e0e0e0;
-      color: #333;
-    }
-    .message-user {
-      font-weight: bold;
-      margin-right: 5px;
-      user-select: text;
-    }
-    .input {
-      display: flex;
-      border-top: 1px solid #202225;
-      padding: 10px;
-      background-color: #2f3136;
-      transition: background-color 0.3s;
-    }
-    body.light .input {
-      background-color: #fafafa;
-    }
-    .input input {
-      flex: 1;
-      padding: 10px;
-      border-radius: 5px;
-      border: none;
-      background-color: #40444b;
-      color: white;
-      outline: none;
-      font-size: 16px;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    body.light .input input {
-      background-color: #fff;
-      color: #333;
-      border: 1px solid #ccc;
-    }
-    /* Settings panel */
-    #settingsPanel {
-      position: fixed;
-      top: 60px;
-      right: 20px;
-      background: #23272a;
-      border-radius: 10px;
-      padding: 15px;
-      width: 320px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.5);
-      display: none;
-      z-index: 1000;
-      color: white;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    body.light #settingsPanel {
-      background: #eee;
-      color: #333;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-    }
-    #settingsPanel h3 {
-      margin-top: 0;
-      margin-bottom: 10px;
-      user-select: none;
-    }
-    #settingsPanel label {
-      display: block;
-      margin-bottom: 8px;
-      user-select: none;
-    }
-    #settingsPanel input[type="text"] {
-      width: 100%;
-      padding: 6px;
-      margin-bottom: 12px;
-      border-radius: 4px;
-      border: none;
-      outline: none;
-      font-size: 14px;
-    }
-    #settingsPanel input[type="file"] {
-      margin-bottom: 12px;
-    }
-    #settingsPanel button {
-      background: #7289da;
-      color: white;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: background-color 0.3s;
-      user-select: none;
-    }
-    #settingsPanel button:hover {
-      background: #5b6eae;
-    }
-    /* Settings toggle button */
-    #settingsToggle {
-      position: fixed;
-      top: 15px;
-      right: 15px;
-      background: #7289da;
-      color: white;
-      border: none;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      font-size: 24px;
-      cursor: pointer;
-      user-select: none;
-      z-index: 1100;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      transition: background-color 0.3s;
-    }
-    #settingsToggle:hover {
-      background: #5b6eae;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>GitHub Chat - 2 Channels</title>
+<style>
+  body {
+    margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #2c2f33; color: white; display: flex; height: 100vh;
+    flex-direction: column;
+  }
+  header {
+    background: #23272a; padding: 10px 20px; font-weight: bold; font-size: 20px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  #settingsBtn {
+    background: #7289da; border: none; color: white; padding: 5px 12px;
+    border-radius: 4px; cursor: pointer;
+  }
+  #chat {
+    flex: 1; display: flex; overflow: hidden;
+  }
+  .sidebar {
+    width: 70px; background-color: #23272a; display: flex; flex-direction: column;
+    align-items: center; padding-top: 10px; user-select: none;
+  }
+  .server-icon {
+    width: 50px; height: 50px; background-color: #7289da;
+    border-radius: 50%; display: flex; justify-content: center; align-items: center;
+    font-weight: bold; font-size: 14px; margin-bottom: 10px;
+  }
+  .channel-bar {
+    width: 240px; background-color: #2c2f33; padding: 10px;
+    box-sizing: border-box;
+  }
+  .channel {
+    padding: 10px; background-color: #36393f; border-radius: 5px;
+    margin-bottom: 5px; font-weight: bold; cursor: pointer;
+  }
+  .channel.active {
+    background-color: #7289da;
+    color: white;
+  }
+  .chat-window {
+    flex: 1; background-color: #36393f; display: flex; flex-direction: column;
+  }
+  .chat-header {
+    padding: 10px; border-bottom: 1px solid #202225; font-weight: bold;
+  }
+  .messages {
+    flex: 1; padding: 10px; overflow-y: auto; word-break: break-word;
+  }
+  .message {
+    margin-bottom: 10px; display: flex; align-items: center;
+  }
+  .message .avatar {
+    width: 32px; height: 32px; border-radius: 50%; background-color: #7289da;
+    color: white; font-weight: bold; font-size: 14px; display: flex;
+    justify-content: center; align-items: center; margin-right: 8px;
+    flex-shrink: 0;
+  }
+  .message .content {
+    background: #2f3136; padding: 8px 12px; border-radius: 6px;
+    max-width: 75%;
+  }
+  .message .username {
+    font-weight: bold; margin-right: 5px; color: #7289da;
+  }
+  .input-area {
+    border-top: 1px solid #202225; padding: 10px;
+    display: flex; background-color: #40444b;
+  }
+  .input-area input {
+    flex: 1; padding: 10px; border-radius: 5px; border: none;
+    background-color: #2c2f33; color: white; font-size: 16px;
+    outline: none;
+  }
+</style>
 </head>
 <body>
+
+<header>
+  GitHub Chat - 2 Channels
+  <button id="settingsBtn" title="Settings">⚙️</button>
+</header>
+
+<div id="chat">
   <div class="sidebar">
     <div class="server-icon" title="GitHub Chat">GH</div>
   </div>
   <div class="channel-bar">
-    <div class="channel" id="channelNameDisplay"># github-chat</div>
+    <div class="channel active" data-channel="github-chat"># github-chat</div>
+    <div class="channel" data-channel="bot-chat"># bot-chat</div>
   </div>
-  <div class="chat">
+  <div class="chat-window">
     <div class="chat-header" id="chatHeader"># github-chat</div>
     <div class="messages" id="messages"></div>
-    <div class="input">
-      <input id="messageInput" type="text" placeholder="Send a message..." autocomplete="off" />
+    <div class="input-area">
+      <input id="messageInput" placeholder="Send a message..." autocomplete="off" />
     </div>
   </div>
+</div>
 
-  <!-- Settings toggle button -->
-  <button id="settingsToggle" title="Settings">⚙️</button>
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-  <!-- Settings panel -->
-  <div id="settingsPanel">
-    <h3>Settings</h3>
-    <label for="usernameInput">Your Name:</label>
-    <input type="text" id="usernameInput" placeholder="Enter your username" />
+<script>
+  // TODO: Replace with your Firebase config
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT_ID.appspot.com",
+    messagingSenderId: "SENDER_ID",
+    appId: "APP_ID"
+  };
 
-    <label for="pfpInput">Profile Picture (URL or upload):</label>
-    <input type="text" id="pfpInput" placeholder="Paste image URL here" />
-    <input type="file" id="pfpUpload" accept="image/*" />
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 
-    <label for="serverNameInput">Server Name:</label>
-    <input type="text" id="serverNameInput" placeholder="GitHub Chat" />
+  // DOM
+  const messagesDiv = document.getElementById('messages');
+  const input = document.getElementById('messageInput');
+  const chatHeader = document.getElementById('chatHeader');
+  const channels = document.querySelectorAll('.channel');
 
-    <label for="channelNameInput">Channel Name:</label>
-    <input type="text" id="channelNameInput" placeholder="github-chat" />
+  // User setup
+  let user = {
+    name: localStorage.getItem('chat_name') || '',
+    avatar: '',
+  };
 
-    <label>
-      <input type="checkbox" id="modeToggle" />
-      Light Mode
-    </label>
+  // Current active channel
+  let activeChannel = 'github-chat';
 
-    <button id="saveSettingsBtn">Save Settings</button>
-  </div>
+  // Ask for user name if not set
+  if (!user.name) {
+    const n = prompt("What's your name?");
+    user.name = n ? n.trim() || 'Anonymous' : 'Anonymous';
+    localStorage.setItem('chat_name', user.name);
+  }
 
-  <audio id="sendSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+  // Helper to create avatar (initials)
+  function createAvatar(name) {
+    const div = document.createElement('div');
+    div.className = 'avatar';
+    div.textContent = name.slice(0,2).toUpperCase();
+    return div;
+  }
 
-  <script>
-    (() => {
-      // Elements
-      const input = document.getElementById('messageInput');
-      const messages = document.getElementById('messages');
-      const settingsToggle = document.getElementById('settingsToggle');
-      const settingsPanel = document.getElementById('settingsPanel');
-      const usernameInput = document.getElementById('usernameInput');
-      const pfpInput = document.getElementById('pfpInput');
-      const pfpUpload = document.getElementById('pfpUpload');
-      const serverNameInput = document.getElementById('serverNameInput');
-      const channelNameInput = document.getElementById('channelNameInput');
-      const chatHeader = document.getElementById('chatHeader');
-      const channelNameDisplay = document.getElementById('channelNameDisplay');
-      const modeToggle = document.getElementById('modeToggle');
-      const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-      const sendSound = document.getElementById('sendSound');
+  // Add message to DOM
+  function addMessage(msg) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message';
 
-      // Default state
-      let username = localStorage.getItem('githubChatUsername') || '';
-      let pfp = localStorage.getItem('githubChatPfp') || '';
-      let serverName = localStorage.getItem('githubChatServerName') || 'GitHub Chat';
-      let channelName = localStorage.getItem('githubChatChannelName') || 'github-chat';
-      let isLightMode = localStorage.getItem('githubChatLightMode') === 'true';
+    messageDiv.appendChild(createAvatar(msg.name));
 
-      // Initialize UI from stored values or prompt user
-      function init() {
-        if (!username) {
-          username = prompt('Enter your username:', 'you') || 'you';
-          localStorage.setItem('githubChatUsername', username);
-        }
-        usernameInput.value = username;
-        pfpInput.value = pfp;
-        serverNameInput.value = serverName;
-        channelNameInput.value = channelName;
-        modeToggle.checked = isLightMode;
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'content';
 
-        // Set UI texts
-        document.querySelector('.server-icon').textContent = serverName.slice(0, 2).toUpperCase();
-        chatHeader.textContent = `# ${channelName}`;
-        channelNameDisplay.textContent = `# ${channelName}`;
-        document.title = serverName + ' - ' + channelName;
+    const usernameSpan = document.createElement('span');
+    usernameSpan.className = 'username';
+    usernameSpan.textContent = msg.name + ':';
 
-        // Set mode
-        if (isLightMode) {
-          document.body.classList.add('light');
-        } else {
-          document.body.classList.remove('light');
-        }
+    const textSpan = document.createElement('span');
+    textSpan.textContent = ' ' + msg.text;
 
-        // Load chat history and show
-        loadChatHistory();
+    contentDiv.appendChild(usernameSpan);
+    contentDiv.appendChild(textSpan);
 
-        // Welcome bot message only once per session
-        if (!sessionStorage.getItem('welcomeBotSent')) {
-          addBotMessage(`Welcome to ${serverName} / #${channelName}! Type something to chat.`);
-          sessionStorage.setItem('welcomeBotSent', 'true');
-        }
-      }
+    messageDiv.appendChild(contentDiv);
 
-      // Save chat history to localStorage
-      function saveChatHistory() {
-        const msgs = [];
-        document.querySelectorAll('.message').forEach(m => {
-          msgs.push({
-            user: m.dataset.user,
-            content: m.querySelector('.message-content').innerText,
-            pfp: m.dataset.pfp || '',
-            isBot: m.dataset.isBot === 'true'
-          });
+    messagesDiv.appendChild(messageDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+  }
+
+  // Load messages for a given channel and listen for new ones
+  let messagesRef = null;
+
+  function listenChannel(channel) {
+    if (messagesRef) messagesRef.off(); // stop old listener
+
+    messagesDiv.innerHTML = ''; // clear messages
+    chatHeader.textContent = '#' + channel.replace('-', ' ');
+
+    messagesRef = db.ref('messages/' + channel);
+    messagesRef.limitToLast(100).on('child_added', snapshot => {
+      const msg = snapshot.val();
+      addMessage(msg);
+    });
+  }
+
+  // Send message
+  function sendMessage(text) {
+    if (!text.trim()) return;
+    const message = {
+      name: user.name,
+      text: text,
+      timestamp: Date.now()
+    };
+    db.ref('messages/' + activeChannel).push(message);
+
+    // Bot only replies in bot-chat channel
+    if (activeChannel === 'bot-chat') {
+      botReply(text);
+    }
+  }
+
+  // Bot reply logic - only replies when @WelcomeBot is pinged
+  function botReply(text) {
+    const lower = text.toLowerCase();
+    if (!lower.includes('@welcomebot')) return;
+
+    let reply = null;
+    if (lower.includes('hello') || lower.includes('hi')) reply = "Hello! How can I help you?";
+    else if (lower.includes('help')) reply = "I'm here to assist! What do you need?";
+    else if (lower.includes('thanks') || lower.includes('thank you')) reply = "You're welcome!";
+    else reply = "🤖 (I didn't understand that.)";
+
+    if (reply) {
+      setTimeout(() => {
+        db.ref('messages/bot-chat').push({
+          name: 'WelcomeBot',
+          text: reply,
+          timestamp: Date.now()
         });
-        localStorage.setItem('githubChatMessages', JSON.stringify(msgs));
-      }
+      }, 1500);
+    }
+  }
 
-      // Load chat history from localStorage
-      function loadChatHistory() {
-        messages.innerHTML = '';
-        const msgs = JSON.parse(localStorage.getItem('githubChatMessages') || '[]');
-        msgs.forEach(m => {
-          addMessage(m.user, m.content, m.pfp, m.isBot, false);
-        });
-        messages.scrollTop = messages.scrollHeight;
-      }
+  // Channel click handler
+  channels.forEach(channelEl => {
+    channelEl.onclick = () => {
+      if (channelEl.dataset.channel === activeChannel) return;
+      activeChannel = channelEl.dataset.channel;
 
-      // Create message element and append
-      // userName: string, messageText: string, profilePicURL: string, isBot: bool, playSound: bool
-      function addMessage(userName, messageText, profilePicURL, isBot = false, playSound = true) {
-        const msgDiv = document.createElement('div');
-        msgDiv.classList.add('message');
-        msgDiv.dataset.user = userName;
-        msgDiv.dataset.pfp = profilePicURL;
-        msgDiv.dataset.isBot = isBot;
+      channels.forEach(c => c.classList.remove('active'));
+      channelEl.classList.add('active');
 
-        // Avatar image or fallback icon
-        let avatarHTML = '';
-        if (profilePicURL) {
-          avatarHTML = `<img class="avatar" src="${profilePicURL}" alt="${userName} avatar" onerror="this.onerror=null;this.src='https://cdn-icons-png.flaticon.com/512/149/149071.png';" />`;
-        } else {
-          // fallback avatar with initials
-          const initials = userName.slice(0,2).toUpperCase();
-          avatarHTML = `<div class="avatar" style="background:#7289da; color:white; display:flex;justify-content:center;align-items:center; font-weight:bold; font-size:14px; user-select:none;">${initials}</div>`;
-        }
+      listenChannel(activeChannel);
+    };
+  });
 
-        msgDiv.innerHTML = `
-          ${avatarHTML}
-          <div class="message-content"><span class="message-user">${userName}${isBot ? ' 🤖' : ''}:</span> ${escapeHtml(messageText)}</div>
-        `;
+  // Message input handler
+  input.addEventListener('keypress', e => {
+    if (e.key === 'Enter' && input.value.trim() !== '') {
+      sendMessage(input.value.trim());
+      input.value = '';
+    }
+  });
 
-        messages.appendChild(msgDiv);
-        messages.scrollTop = messages.scrollHeight;
+  // Start listening on default channel
+  listenChannel(activeChannel);
+</script>
 
-        if (playSound) {
-          sendSound.currentTime = 0;
-          sendSound.play();
-        }
-
-        saveChatHistory();
-      }
-
-      // Escape HTML to prevent injection
-      function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-      }
-
-      // Bot reply logic (simple keyword based)
-      function botReply(userMsg) {
-        const msg = userMsg.toLowerCase();
-
-        let reply = null;
-        if (msg.includes('hello') || msg.includes('hi')) {
-          reply = 'Hello there! How can I help you today?';
-        } else if (msg.includes('help')) {
-          reply = 'Sure! Ask me anything or just chat.';
-        } else if (msg.includes('how are you')) {
-          reply = "I'm just a bot, but I'm doing great!";
-        } else if (msg.includes('weather')) {
-          reply = "I don't have weather info, but it's always nice to chat!";
-        } else if (msg.trim() === '') {
-          reply = null; // no reply to empty
-        } else {
-          // default fallback reply with some randomness
-          const fallbackReplies = [
-            "Interesting!",
-            "Tell me more.",
-            "I see!",
-            "Could you explain that?",
-            "That's cool!",
-            "Hmm..."
-          ];
-          reply = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
-        }
-
-        if (reply) {
-          // delay bot reply to seem natural
-          setTimeout(() => {
-            addMessage('WelcomeBot', reply, '', true);
-          }, 700);
-        }
-      }
-
-      // Settings toggle button
-      settingsToggle.onclick = () => {
-        if (settingsPanel.style.display === 'block') {
-          settingsPanel.style.display = 'none';
-        } else {
-          settingsPanel.style.display = 'block';
-        }
-      };
-
-      // Save settings
-      saveSettingsBtn.onclick = () => {
-        const newName = usernameInput.value.trim() || 'you';
-        const newPfp = pfpInput.value.trim();
-        const newServerName = serverNameInput.value.trim() || 'GitHub Chat';
-        const newChannelName = channelNameInput.value.trim() || 'github-chat';
-        const newMode = modeToggle.checked;
-
-        username = newName;
-        pfp = newPfp;
-        serverName = newServerName;
-        channelName = newChannelName;
-        isLightMode = newMode;
-
-        localStorage.setItem('githubChatUsername', username);
-        localStorage.setItem('githubChatPfp', pfp);
-        localStorage.setItem('githubChatServerName', serverName);
-        localStorage.setItem('githubChatChannelName', channelName);
-        localStorage.setItem('githubChatLightMode', isLightMode);
-
-        // Update UI
-        document.querySelector('.server-icon').textContent = serverName.slice(0, 2).toUpperCase();
-        chatHeader.textContent = `# ${channelName}`;
-        channelNameDisplay.textContent = `# ${channelName}`;
-        document.title = serverName + ' - ' + channelName;
-
-        if (isLightMode) {
-          document.body.classList.add('light');
-        } else {
-          document.body.classList.remove('light');
-        }
-
-        settingsPanel.style.display = 'none';
-      };
-
-      // Profile picture upload: convert to DataURL and put in pfpInput
-      pfpUpload.onchange = e => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = evt => {
-          pfpInput.value = evt.target.result;
-        };
-        reader.readAsDataURL(file);
-      };
-
-      // On message enter
-      input.addEventListener('keypress', function (e) {
-        if (e.key === 'Enter' && input.value.trim() !== '') {
-          const msg = input.value.trim();
-          addMessage(username, msg, pfp, false);
-          input.value = '';
-
-          // Bot reply
-          botReply(msg);
-        }
-      });
-
-      // Initialize everything on load
-      init();
-    })();
-  </script>
 </body>
 </html>
